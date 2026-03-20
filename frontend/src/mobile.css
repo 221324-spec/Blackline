@@ -1,0 +1,245 @@
+/* Global Mobile Responsiveness CSS */
+
+/* Prevent overflow on all elements */
+* {
+  box-sizing: border-box;
+}
+
+html, body {
+  margin: 0;
+  padding: 0;
+  overflow-x: hidden;
+  width: 100%;
+  max-width: 100%;
+}
+
+/* Buttons */
+button, .btn, input[type="button"], input[type="submit"] {
+  transition: all 0.2s ease;
+}
+
+@media (max-width: 768px) {
+  button, .btn, input[type="button"], input[type="submit"] {
+    padding: 10px 16px;
+    font-size: 14px;
+    min-height: 44px;
+    border-radius: 8px;
+  }
+}
+
+@media (max-width: 480px) {
+  button, .btn, input[type="button"], input[type="submit"] {
+    padding: 8px 14px;
+    font-size: 13px;
+    min-height: 40px;
+    width: 100%;
+  }
+}
+
+/* Form Inputs */
+input, textarea, select {
+  box-sizing: border-box;
+}
+
+@media (max-width: 768px) {
+  input, textarea, select {
+    font-size: 16px;
+    padding: 12px;
+    border-radius: 8px;
+    width: 100%;
+  }
+}
+
+@media (max-width: 480px) {
+  input, textarea, select {
+    font-size: 16px;
+    padding: 10px;
+  }
+}
+
+/* Tables */
+table {
+  width: 100%;
+  border-collapse: collapse;
+}
+
+@media (max-width: 768px) {
+  table {
+    font-size: 14px;
+  }
+
+  table th, table td {
+    padding: 12px 8px;
+  }
+}
+
+@media (max-width: 480px) {
+  table {
+    font-size: 12px;
+    display: block;
+    overflow-x: auto;
+  }
+
+  table th, table td {
+    padding: 8px 6px;
+  }
+
+  /* Responsive table for mobile */
+  table thead {
+    display: none;
+  }
+
+  table tr {
+    display: block;
+    margin-bottom: 15px;
+    border: 1px solid #e2e8f0;
+    border-radius: 8px;
+    padding: 10px;
+  }
+
+  table td {
+    display: block;
+    text-align: right;
+    padding-left: 50%;
+    position: relative;
+  }
+
+  table td:before {
+    content: attr(data-label);
+    position: absolute;
+    left: 6px;
+    font-weight: 700;
+    text-align: left;
+  }
+}
+
+/* Lists */
+ul, ol {
+  padding-left: 20px;
+}
+
+@media (max-width: 480px) {
+  ul, ol {
+    padding-left: 16px;
+  }
+}
+
+/* Modals/Dialogs */
+.modal, .dialog {
+  max-width: 90vw;
+  max-height: 90vh;
+  border-radius: 16px;
+}
+
+@media (max-width: 480px) {
+  .modal, .dialog {
+    max-width: 95vw;
+    max-height: 95vh;
+    border-radius: 12px;
+  }
+}
+
+/* Scroll behavior */
+@media (prefers-reduced-motion: no-preference) {
+  html {
+    scroll-behavior: smooth;
+  }
+}
+
+/* Touch targets - minimum 44px */
+a, button, input[type="button"], input[type="checkbox"], input[type="radio"] {
+  min-height: 44px;
+  min-width: 44px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+}
+
+/* Text sizing for mobile */
+@media (max-width: 480px) {
+  h1 {
+    font-size: 1.5rem;
+  }
+
+  h2 {
+    font-size: 1.25rem;
+  }
+
+  h3 {
+    font-size: 1.1rem;
+  }
+
+  h4, h5, h6 {
+    font-size: 1rem;
+  }
+
+  body {
+    font-size: 14px;
+  }
+}
+
+/* Flexbox utilities */
+.flex-mobile-col {
+  flex-direction: column;
+}
+
+@media (max-width: 768px) {
+  .flex-col-mobile {
+    flex-direction: column;
+  }
+
+  .flex-row-mobile {
+    flex-direction: row;
+  }
+}
+
+/* Grid adjustments */
+@media (max-width: 480px) {
+  .grid-4-col {
+    grid-template-columns: repeat(2, 1fr);
+  }
+
+  .grid-3-col {
+    grid-template-columns: repeat(2, 1fr);
+  }
+
+  .grid-2-col {
+    grid-template-columns: 1fr;
+  }
+}
+
+/* Touchscreen optimizations */
+@media (hover: none) {
+  button:hover,
+  a:hover {
+    opacity: 0.8;
+  }
+
+  button:active,
+  a:active {
+    transform: scale(0.98);
+  }
+}
+
+/* Safe area support for notched devices */
+@supports (padding: max(0px)) {
+  body {
+    padding-left: max(12px, env(safe-area-inset-left));
+    padding-right: max(12px, env(safe-area-inset-right));
+    padding-top: max(12px, env(safe-area-inset-top));
+  }
+}
+
+/* Prevent zoom on input focus (iOS) */
+input, select, textarea {
+  font-size: 16px;
+}
+
+/* Dark mode support */
+@media (prefers-color-scheme: dark) {
+  input, textarea, select {
+    background: #1e293b;
+    color: #f1f5f9;
+    border-color: #475569;
+  }
+}

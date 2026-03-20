@@ -1,0 +1,121 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Clear Token</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            max-width: 600px;
+            margin: 50px auto;
+            padding: 20px;
+            background: #f5f5f5;
+        }
+        .container {
+            background: white;
+            padding: 30px;
+            border-radius: 10px;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+        }
+        button {
+            background: #667eea;
+            color: white;
+            border: none;
+            padding: 12px 24px;
+            border-radius: 6px;
+            cursor: pointer;
+            font-size: 16px;
+            margin: 10px 5px;
+        }
+        button:hover {
+            background: #5568d3;
+        }
+        .info {
+            background: #e3f2fd;
+            padding: 15px;
+            border-radius: 6px;
+            margin: 15px 0;
+        }
+        .success {
+            background: #c8e6c9;
+            padding: 15px;
+            border-radius: 6px;
+            margin: 15px 0;
+        }
+        pre {
+            background: #f5f5f5;
+            padding: 10px;
+            border-radius: 4px;
+            overflow-x: auto;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>🔧 Token Manager</h1>
+        
+        <div class="info">
+            <h3>Current Token Info:</h3>
+            <pre id="tokenInfo">Loading...</pre>
+        </div>
+
+        <button onclick="checkToken()">🔍 Check Current Token</button>
+        <button onclick="clearToken()">🗑️ Clear Token</button>
+        <button onclick="goToLogin()">🔐 Go to Login</button>
+
+        <div id="result"></div>
+    </div>
+
+    <script>
+        function decodeJWT(token) {
+            try {
+                const base64Url = token.split('.')[1];
+                const base64 = base64Url.replace(/-/g, '+').replace(/_/g, '/');
+                const jsonPayload = decodeURIComponent(atob(base64).split('').map(function(c) {
+                    return '%' + ('00' + c.charCodeAt(0).toString(16)).slice(-2);
+                }).join(''));
+                return JSON.parse(jsonPayload);
+            } catch (e) {
+                return null;
+            }
+        }
+
+        function checkToken() {
+            const token = localStorage.getItem('token');
+            const info = document.getElementById('tokenInfo');
+            
+            if (!token) {
+                info.textContent = '❌ No token found in localStorage';
+                return;
+            }
+
+            const decoded = decodeJWT(token);
+            if (decoded) {
+                info.textContent = JSON.stringify(decoded, null, 2);
+                
+                if (!decoded.name) {
+                    info.innerHTML = JSON.stringify(decoded, null, 2) + 
+                        '\n\n⚠️ OLD TOKEN: Missing "name" field!\n✅ You need to login again.';
+                } else {
+                    info.innerHTML = JSON.stringify(decoded, null, 2) + 
+                        '\n\n✅ Token has name field: ' + decoded.name;
+                }
+            } else {
+                info.textContent = '❌ Invalid token format';
+            }
+        }
+
+        function clearToken() {
+            localStorage.removeItem('token');
+            document.getElementById('result').innerHTML = 
+                '<div class="success">✅ Token cleared successfully!<br>Now click "Go to Login" button.</div>';
+            checkToken();
+        }
+
+        function goToLogin() {
+            window.location.href = '/login';
+        }
+
+        checkToken();
+    </script>
+</body>
+</html>

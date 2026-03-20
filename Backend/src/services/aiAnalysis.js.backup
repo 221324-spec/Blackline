@@ -1,0 +1,243 @@
+const OpenAI = require('openai');
+
+// Initialize OpenAI client
+const openai = new OpenAI({
+  apiKey: process.env.OPENAI_API_KEY || 'your-api-key-here'
+});
+
+/**
+ * Analyze a single trade using GPT-4
+ */
+async function analyzeTrade(trade) {
+  try {
+    const prompt = `Analyze this trading trade:
+Symbol: ${trade.symbol}
+Entry Price: ${trade.entryPrice}
+Exit Price: ${trade.exitPrice}
+Result: ${trade.result}
+Profit/Loss: ${trade.profitLoss}
+Risk:Reward: ${trade.riskReward}
+Notes: ${trade.notes || 'No notes provided'}
+
+Provide a brief analysis (2-3 sentences) covering:
+1. What went well or wrong
+2. Key lesson learned
+3. One actionable improvement suggestion
+
+Keep it concise and actionable.`;
+
+    const response = await openai.chat.completions.create({
+      model: 'gpt-4o-mini',
+      messages: [
+        {
+          role: 'system',
+          content: 'You are an expert trading coach analyzing forex/stock trades. Provide concise, actionable feedback.'
+        },
+        {
+          role: 'user',
+          content: prompt
+        }
+      ],
+      max_tokens: 200,
+      temperature: 0.7
+    });
+
+    return {
+      analysis: response.choices[0].message.content.trim(),
+      timestamp: new Date()
+    };
+  } catch (error) {
+    console.error('AI Analysis Error:', error);
+    throw new Error('Failed to analyze trade with AI');
+  }
+}
+
+/**
+ * Analyze multiple trades and provide overall insights
+ */
+async function analyzeTradePattern(trades) {
+  try {
+    // Prepare trade summary
+    const totalTrades = trades.length;
+    const wins = trades.filter(t => t.result === 'win').length;
+    const losses = trades.filter(t => t.result === 'loss').length;
+    const winRate = totalTrades > 0 ? ((wins / totalTrades) * 100).toFixed(1) : 0;
+    const totalPL = trades.reduce((sum, t) => sum + (t.profitLoss || 0), 0);
+    
+    // Get most traded symbols
+    const symbolCounts = {};
+    trades.forEach(t => {
+      symbolCounts[t.symbol] = (symbolCounts[t.symbol] || 0) + 1;
+    });
+    const topSymbols = Object.entries(symbolCounts)
+      .sort((a, b) => b[1] - a[1])
+      .slice(0, 3)
+      .map(([symbol, count]) => `${symbol} (${count} trades)`);
+
+    const prompt = `Analyze this trading performance:
+
+Overall Stats:
+- Total Trades: ${totalTrades}
+- Win Rate: ${winRate}%
+- Total P/L: ${totalPL > 0 ? '+' : ''}${totalPL.toFixed(2)} pips
+- Most Traded: ${topSymbols.join(', ')}
+
+Recent Trades Summary:
+${trades.slice(0, 5).map(t => 
+  `- ${t.symbol}: ${t.result === 'win' ? '✅' : '❌'} ${t.result.toUpperCase()} (${t.profitLoss > 0 ? '+' : ''}${t.profitLoss} pips, R:R ${t.riskReward})`
+).join('\n')}
+
+Provide a comprehensive analysis with EXACTLY this format:
+
+**1. Overall Performance**
+Give a 2-3 sentence assessment of overall trading performance based on win rate and P/L.
+
+**2. Strengths**
+List 2-3 things the trader is doing well, each on a new line starting with "-"
+
+**3. Weaknesses**
+List 2-3 areas that need improvement, each on a new line starting with "-"
+
+**4. Patterns Identified**
+List 2-3 noticeable patterns (good or bad), each on a new line starting with "-"
+
+**5. Recommendations**
+List 3 specific actionable steps to improve, each on a new line starting with "-"
+
+Use clear bullet points (-) for all list items.`;
+
+    const response = await openai.chat.completions.create({
+      model: 'gpt-4o-mini',
+      messages: [
+        {
+          role: 'system',
+          content: 'You are an expert trading coach providing detailed performance analysis. Be specific, honest, and actionable.'
+        },
+        {
+          role: 'user',
+          content: prompt
+        }
+      ],
+      max_tokens: 600,
+      temperature: 0.7
+    });
+
+    return {
+      insights: response.choices[0].message.content.trim(),
+      stats: {
+        totalTrades,
+        winRate: parseFloat(winRate),
+        totalPL,
+        wins,
+        losses
+      },
+      timestamp: new Date()
+    };
+  } catch (error) {
+    console.error('Pattern Analysis Error:', error);
+    throw new Error('Failed to analyze trade patterns with AI');
+  }
+}
+
+/**
+ * Get trading advice based on recent performance
+ */
+async function getTradingAdvice(userMetrics, recentTrades) {
+  try {
+    const prompt = `Based on this trader's recent performance:
+
+Metrics:
+- Total Trades: ${userMetrics.totalTrades || 0}
+- Win Rate: ${userMetrics.winRate || 0}%
+- Average R:R: ${userMetrics.avgRiskReward || 0}
+- Best Trade: ${userMetrics.bestTrade || 0} pips
+- Worst Trade: ${userMetrics.worstTrade || 0} pips
+
+Recent Activity:
+${recentTrades.slice(0, 3).map(t => 
+  `- ${t.symbol}: ${t.result === 'win' ? 'WIN' : 'LOSS'} (R:R ${t.riskReward})`
+).join('\n')}
+
+Provide 3 personalized trading tips or advice for today. Keep each tip to 1-2 sentences.
+Format as bullet points starting with an emoji.`;
+
+    const response = await openai.chat.completions.create({
+      model: 'gpt-4o-mini',
+      messages: [
+        {
+          role: 'system',
+          content: 'You are a supportive trading mentor providing daily guidance. Be encouraging but realistic.'
+        },
+        {
+          role: 'user',
+          content: prompt
+        }
+      ],
+      max_tokens: 250,
+      temperature: 0.8
+    });
+
+    return {
+      advice: response.choices[0].message.content.trim(),
+      timestamp: new Date()
+    };
+  } catch (error) {
+    console.error('Trading Advice Error:', error);
+    throw new Error('Failed to generate trading advice');
+  }
+}
+
+/**
+ * Identify mistakes in a trade
+ */
+async function identifyMistakes(trade) {
+  try {
+    const prompt = `Review this trade for potential mistakes:
+
+Symbol: ${trade.symbol}
+Entry: ${trade.entryPrice}
+Exit: ${trade.exitPrice}
+Result: ${trade.result}
+P/L: ${trade.profitLoss} pips
+R:R Ratio: ${trade.riskReward}
+Notes: ${trade.notes || 'No notes'}
+
+Identify:
+1. Any obvious mistakes or rule violations
+2. What could have been done better
+3. One specific thing to avoid next time
+
+Be direct but constructive. If the trade was executed well, say so.`;
+
+    const response = await openai.chat.completions.create({
+      model: 'gpt-4o-mini',
+      messages: [
+        {
+          role: 'system',
+          content: 'You are a strict but fair trading coach identifying mistakes. Be honest and specific.'
+        },
+        {
+          role: 'user',
+          content: prompt
+        }
+      ],
+      max_tokens: 200,
+      temperature: 0.6
+    });
+
+    return {
+      mistakes: response.choices[0].message.content.trim(),
+      timestamp: new Date()
+    };
+  } catch (error) {
+    console.error('Mistake Identification Error:', error);
+    throw new Error('Failed to identify mistakes');
+  }
+}
+
+module.exports = {
+  analyzeTrade,
+  analyzeTradePattern,
+  getTradingAdvice,
+  identifyMistakes
+};
